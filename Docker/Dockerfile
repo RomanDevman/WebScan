@@ -20,12 +20,24 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Create system user to run Composer and Artisan Commands
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php
+RUN mv composer.phar /usr/local/bin/composer
+
+# Create system user to run Composer
 RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
 # Set working directory
 WORKDIR /var/www
+
+USER $user
+
+# Install PHPUnit
+RUN composer global require "phpunit/phpunit"
+
+USER root
+RUN ln -s /home/$user/.composer/vendor/bin/phpunit /usr/bin/phpunit
 
 USER $user
